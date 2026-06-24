@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Barbero — Zero Grados</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #f0f0f0; padding: 24px 16px; max-width: 480px; margin: auto; }
+    h1 { font-size: 1.3rem; font-weight: 700; color: #f5c842; margin-bottom: 4px; }
+    p.sub { color: #555; font-size: 0.85rem; margin-bottom: 24px; }
+
+    .turno-actual {
+      background: #161600;
+      border: 2px solid #f5c842;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .turno-actual p { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .turno-actual .num { font-size: 4rem; font-weight: 900; color: #f5c842; line-height: 1; }
+    .turno-actual .detalle { font-size: 0.95rem; color: #ccc; margin-top: 8px; }
+
+    .btn-siguiente {
+      width: 100%;
+      padding: 18px;
+      background: #f5c842;
+      color: #0a0a0a;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: background 0.2s;
+    }
+    .btn-siguiente:hover { background: #e6b935; }
+
+    h2 { font-size: 0.8rem; text-transform: uppercase; color: #555; letter-spacing: 1px; margin-bottom: 12px; }
+    .lista { display: flex; flex-direction: column; gap: 10px; }
+    .item {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item .num-s { font-size: 1.2rem; font-weight: 800; color: #f5c842; min-width: 44px; }
+    .item .info { flex: 1; padding: 0 10px; }
+    .item .info .nombre { font-size: 0.9rem; font-weight: 600; }
+    .item .info .serv { font-size: 0.78rem; color: #777; }
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid #2a2a2a;
+      color: #666;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: #e74c3c; color: #e74c3c; }
+    #sin-turnos { text-align: center; color: #333; font-size: 0.9rem; padding: 24px; }
+  </style>
+</head>
+<body>
+  <h1>✂️ Panel del Barbero</h1>
+  <p class="sub">Gestión de turnos del día</p>
+
+  <div class="turno-actual">
+    <p>Atendiendo ahora</p>
+    <div class="num" id="num-actual">—</div>
+    <div class="detalle" id="detalle-actual">Sin turno activo</div>
+  </div>
+
+  <button class="btn-siguiente" onclick="siguienteTurno()">▶ Llamar siguiente turno</button>
+
+  <h2>En espera (<span id="count">0</span>)</h2>
+  <div class="lista" id="lista-turnos">
+    <div id="sin-turnos">No hay turnos en espera</div>
+  </div>
+
+  <script>
+    const socket = io();
+    socket.on('turno_cambiado', cargarTodo);
+    socket.on('turno_nuevo', cargarTodo);
+    socket.on('turno_cancelado', cargarTodo);
+
+    async function cargarTodo() {
+      const [r1, r2] = await Promise.all([
+        fetch('/api/turno/actual'),
+        fetch('/api/turno/lista')
+      ]);
+      const { turno_actual } = await r1.json();
+      const { turnos } = await r2.json();
+
+      if (turno_actual) {
+        document.getElementById('num-actual').textContent = `#${turno_actual.numero}`;
+        document.getElementById('detalle-actual').textContent = `${turno_actual.nombre} — ${turno_actual.servicio}`;
+      } else {
+        document.getElementById('num-actual').textContent = '—';
+        document.getElementById('detalle-actual').textContent = 'Sin turno activo';
+      }
+
+      const enEspera = turnos.filter(t => t.estado === 'esperando');
+      document.getElementById('count').textContent = enEspera.length;
+
+      const lista = document.getElementById('lista-turnos');
+      if (enEspera.length === 0) {
+        lista.innerHTML = '<div id="sin-turnos">No hay turnos en espera</div>';
+        return;
+      }
+      lista.innerHTML = enEspera.map(t => `
+        <div class="item">
+          <span class="num-s">#${t.numero}</span>
+          <div class="info">
+            <div class="nombre">${t.nombre}</div>
+            <div class="serv">${t.servicio}</div>
+          </div>
+          <button class="btn-cancel" onclick="cancelar(${t.id})">Cancelar</button>
+        </div>
+      `).join('');
+    }
+
+    async function siguienteTurno() {
+      await fetch('/api/turno/siguiente', { method: 'PUT' });
+    }
+
+    async function cancelar(id) {
+      if (!confirm('¿Cancelar este turno?')) return;
+      await fetch(`/api/turno/cancelar/${id}`, { method: 'PUT' });
+    }
+
+    cargarTodo();
+  </script>
+</body>
+</html>

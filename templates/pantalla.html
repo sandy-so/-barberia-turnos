@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantalla — Zero Grados</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+    .logo { font-size: 1.3rem; color: #f5c842; font-weight: 700; letter-spacing: 3px; margin-bottom: 10px; }
+    .label { font-size: 0.9rem; color: #555; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 16px; }
+    .numero {
+      font-size: clamp(9rem, 28vw, 20rem);
+      font-weight: 900;
+      color: #f5c842;
+      line-height: 1;
+      transition: opacity 0.3s;
+    }
+    .nombre { font-size: clamp(1.4rem, 4vw, 3rem); color: #ddd; margin-top: 14px; font-weight: 300; }
+    .servicio { font-size: clamp(0.9rem, 2.5vw, 1.6rem); color: #666; margin-top: 6px; }
+    .footer { position: absolute; bottom: 24px; color: #333; font-size: 0.85rem; }
+    .footer span { color: #f5c842; font-weight: 700; }
+    .sin-turno { font-size: clamp(1.5rem, 5vw, 3rem); color: #2a2a2a; }
+  </style>
+</head>
+<body>
+  <div class="logo">✂ ZERO GRADOS BARBERSHOP</div>
+  <div class="label">Atendiendo ahora</div>
+  <div id="contenido">
+    <div class="sin-turno">Esperando turno...</div>
+  </div>
+  <div class="footer">En espera: <span id="count-espera">0</span></div>
+
+  <script>
+    const socket = io();
+    socket.on('turno_cambiado', cargarTodo);
+    socket.on('turno_nuevo', cargarTodo);
+    socket.on('turno_cancelado', cargarTodo);
+
+    async function cargarTodo() {
+      const [r1, r2] = await Promise.all([
+        fetch('/api/turno/actual'),
+        fetch('/api/turno/lista')
+      ]);
+      const { turno_actual } = await r1.json();
+      const { turnos } = await r2.json();
+
+      const enEspera = turnos.filter(t => t.estado === 'esperando').length;
+      document.getElementById('count-espera').textContent = enEspera;
+
+      const c = document.getElementById('contenido');
+      if (turno_actual) {
+        c.innerHTML = `
+          <div class="numero">#${turno_actual.numero}</div>
+          <div class="nombre">${turno_actual.nombre}</div>
+          <div class="servicio">${turno_actual.servicio}</div>
+        `;
+      } else {
+        c.innerHTML = '<div class="sin-turno">Sin turno activo</div>';
+      }
+    }
+
+    cargarTodo();
+    setInterval(cargarTodo, 10000);
+  </script>
+</body>
+</html>
