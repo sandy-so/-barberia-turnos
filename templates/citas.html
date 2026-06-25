@@ -124,7 +124,10 @@
     </select>
 
     <label>Fecha *</label>
-    <input type="date" id="fecha" onchange="cargarHorarios()">
+    <div style="display:flex;gap:8px">
+      <input type="date" id="fecha" style="flex:1" onchange="cargarHorarios()" oninput="cargarHorarios()">
+      <button type="button" onclick="cargarHorarios()" style="padding:12px 16px;background:#333;border:1px solid #444;border-radius:10px;color:#f5c842;cursor:pointer;font-size:0.85rem">Ver horarios</button>
+    </div>
 
     <label>Hora *</label>
     <div id="horarios-container">
