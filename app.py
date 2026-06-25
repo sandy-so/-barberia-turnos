@@ -243,6 +243,12 @@ def on_disconnect():
 # MAIN
 # ─────────────────────────────────────────────
 
+with app.app_context():
+    try:
+        init_db()
+    except Exception as e:
+        print(f"DB init error: {e}")
+
 if __name__ == '__main__':
     init_db()
     socketio.run(app, debug=True, host='0.0.0.0', port=5000)
