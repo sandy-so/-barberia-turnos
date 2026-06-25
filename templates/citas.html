@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendar Cita — Zero Grados Barbershop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: #f5c842; letter-spacing: 1px; }
+    header p { font-size: 0.85rem; color: #666; margin-top: 4px; }
+
+    .card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto 20px;
+    }
+    .card h2 { font-size: 0.8rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
+
+    label { display: block; font-size: 0.78rem; color: #888; margin-bottom: 6px; margin-top: 12px; }
+    input, select {
+      width: 100%;
+      padding: 13px 16px;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #f0f0f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus { border-color: #f5c842; }
+    select option { background: #222; }
+
+    .horarios {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .hora-btn {
+      padding: 10px 4px;
+      background: #222;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #f0f0f0;
+      font-size: 0.8rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .hora-btn:hover { border-color: #f5c842; color: #f5c842; }
+    .hora-btn.selected { background: #f5c842; color: #0a0a0a; border-color: #f5c842; font-weight: 700; }
+    .hora-btn.ocupado { background: #1a1a1a; color: #444; border-color: #222; cursor: not-allowed; text-decoration: line-through; }
+
+    button.btn-submit {
+      width: 100%;
+      padding: 15px;
+      background: #f5c842;
+      color: #0a0a0a;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+    button.btn-submit:hover { background: #e6b935; }
+    button.btn-submit:disabled { background: #444; color: #777; cursor: not-allowed; }
+
+    /* Éxito */
+    #exito { display: none; text-align: center; }
+    .check { font-size: 4rem; margin-bottom: 12px; }
+    .exito-num { font-size: 1.4rem; font-weight: 700; color: #f5c842; margin-bottom: 8px; }
+    .exito-info { color: #888; font-size: 0.9rem; line-height: 1.6; }
+    .btn-nueva { margin-top: 20px; background: #222; color: #f0f0f0; width: 100%; padding: 13px; border: 1px solid #333; border-radius: 10px; cursor: pointer; font-size: 0.95rem; }
+    .btn-nueva:hover { background: #2a2a2a; }
+
+    .nav-links { text-align: center; margin-top: 16px; }
+    .nav-links a { color: #555; font-size: 0.8rem; text-decoration: none; margin: 0 10px; }
+    .nav-links a:hover { color: #f5c842; }
+
+    #msg-horarios { color: #666; font-size: 0.8rem; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>✂️ Zero Grados Barbershop</h1>
+    <p>Agenda tu cita en línea</p>
+  </header>
+
+  <div class="card" id="formulario">
+    <h2>Nueva cita</h2>
+
+    <label>Nombre completo *</label>
+    <input type="text" id="nombre" placeholder="Tu nombre" maxlength="100">
+
+    <label>Teléfono *</label>
+    <input type="tel" id="telefono" placeholder="(614) 123-4567" maxlength="20">
+
+    <label>Correo electrónico</label>
+    <input type="email" id="email" placeholder="tu@email.com">
+
+    <label>Servicio *</label>
+    <select id="servicio">
+      <option value="">Selecciona un servicio</option>
+      <option value="Corte clásico">Corte clásico</option>
+      <option value="Corte + barba">Corte + barba</option>
+      <option value="Barba">Barba</option>
+      <option value="Degradado">Degradado</option>
+      <option value="Afeitado clásico">Afeitado clásico</option>
+    </select>
+
+    <label>Fecha *</label>
+    <input type="date" id="fecha" onchange="cargarHorarios()">
+
+    <label>Hora *</label>
+    <div id="horarios-container">
+      <p id="msg-horarios">Selecciona una fecha para ver los horarios</p>
+    </div>
+    <input type="hidden" id="hora-seleccionada">
+
+    <button class="btn-submit" id="btn-agendar" onclick="agendarCita()">Agendar cita</button>
+  </div>
+
+  <div class="card" id="exito">
+    <div class="check">✅</div>
+    <div class="exito-num" id="exito-titulo">¡Cita agendada!</div>
+    <div class="exito-info" id="exito-info"></div>
+    <button class="btn-nueva" onclick="nuevaCita()">Agendar otra cita</button>
+  </div>
+
+  <div class="nav-links">
+    <a href="/">← Turnos</a>
+    <a href="/admin">Panel admin</a>
+  </div>
+
+  <script>
+    // Fecha mínima = hoy
+    const hoy = new Date().toISOString().split('T')[0];
+    document.getElementById('fecha').min = hoy;
+
+    async function cargarHorarios() {
+      const fecha = document.getElementById('fecha').value;
+      if (!fecha) return;
+      document.getElementById('hora-seleccionada').value = '';
+
+      const res = await fetch(`/api/horarios?fecha=${fecha}`);
+      const data = await res.json();
+
+      const container = document.getElementById('horarios-container');
+      if (data.disponibles.length === 0) {
+        container.innerHTML = '<p id="msg-horarios">No hay horarios disponibles para este día</p>';
+        return;
+      }
+
+      const todos = ['09:00','09:30','10:00','10:30','11:00','11:30',
+                     '12:00','12:30','13:00','13:30','14:00','14:30',
+                     '15:00','15:30','16:00','16:30','17:00','17:30',
+                     '18:00','18:30','19:00','19:30'];
+
+      container.innerHTML = '<div class="horarios">' +
+        todos.map(h => {
+          const ocupado = data.ocupados.includes(h);
+          return `<div class="hora-btn ${ocupado ? 'ocupado' : ''}"
+            onclick="${ocupado ? '' : `seleccionarHora('${h}', this)`}">${h}</div>`;
+        }).join('') +
+      '</div>';
+    }
+
+    function seleccionarHora(hora, el) {
+      document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('hora-seleccionada').value = hora;
+    }
+
+    async function agendarCita() {
+      const nombre   = document.getElementById('nombre').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const servicio = document.getElementById('servicio').value;
+      const fecha    = document.getElementById('fecha').value;
+      const hora     = document.getElementById('hora-seleccionada').value;
+
+      if (!nombre || !telefono || !servicio || !fecha || !hora) {
+        alert('Por favor completa todos los campos requeridos y selecciona un horario');
+        return;
+      }
+
+      const btn = document.getElementById('btn-agendar');
+      btn.disabled = true; btn.textContent = 'Agendando...';
+
+      try {
+        const res = await fetch('/api/cita', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, telefono, email, servicio, fecha, hora })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('formulario').style.display = 'none';
+          document.getElementById('exito').style.display = 'block';
+          document.getElementById('exito-info').innerHTML =
+            `<b>${nombre}</b><br>${servicio}<br>📅 ${fecha} a las ⏰ ${hora}<br><br>Te esperamos en Zero Grados Barbershop`;
+        } else {
+          alert(data.error || 'Error al agendar');
+          btn.disabled = false; btn.textContent = 'Agendar cita';
+        }
+      } catch (e) {
+        alert('Error de conexión. Intenta de nuevo.');
+        btn.disabled = false; btn.textContent = 'Agendar cita';
+      }
+    }
+
+    function nuevaCita() {
+      document.getElementById('nombre').value = '';
+      document.getElementById('telefono').value = '';
+      document.getElementById('email').value = '';
+      document.getElementById('servicio').value = '';
+      document.getElementById('fecha').value = '';
+      document.getElementById('hora-seleccionada').value = '';
+      document.getElementById('horarios-container').innerHTML =
+        '<p id="msg-horarios">Selecciona una fecha para ver los horarios</p>';
+      document.getElementById('formulario').style.display = 'block';
+      document.getElementById('exito').style.display = 'none';
+      document.getElementById('btn-agendar').disabled = false;
+      document.getElementById('btn-agendar').textContent = 'Agendar cita';
+    }
+  </script>
+</body>
+</html>

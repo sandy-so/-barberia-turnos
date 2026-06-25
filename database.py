@@ -43,6 +43,20 @@ def init_db():
         VALUES (1, 0, 'Zero Grados Barbershop')
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS citas (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            nombre VARCHAR(100) NOT NULL,
+            telefono VARCHAR(20) NOT NULL,
+            email VARCHAR(100),
+            servicio VARCHAR(100) NOT NULL,
+            fecha DATE NOT NULL,
+            hora VARCHAR(10) NOT NULL,
+            estado ENUM('pendiente','confirmada','cancelada','completada') DEFAULT 'pendiente',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     conn.commit()
     cursor.close()
     conn.close()
