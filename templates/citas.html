@@ -176,7 +176,7 @@
 
       container.innerHTML = '<div class="horarios">' +
         todos.map(h => {
-          const ocupado = data.ocupados.includes(h);
+          const ocupado = (data.ocupados || []).includes(h);
           return `<div class="hora-btn ${ocupado ? 'ocupado' : ''}"
             onclick="${ocupado ? '' : `seleccionarHora('${h}', this)`}">${h}</div>`;
         }).join('') +
