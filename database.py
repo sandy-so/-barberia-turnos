@@ -9,18 +9,13 @@ def get_connection():
         host=os.getenv("DB_HOST", "localhost"),
         user=os.getenv("DB_USER", "root"),
         password=os.getenv("DB_PASSWORD", ""),
-        database=os.getenv("DB_NAME", "barberia_turnos")
+        database=os.getenv("DB_NAME", "railway"),
+        port=int(os.getenv("DB_PORT", 3306))
     )
 
 def init_db():
-    conn = mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        user=os.getenv("DB_USER", "root"),
-        password=os.getenv("DB_PASSWORD", "")
-    )
+    conn = get_connection()
     cursor = conn.cursor()
-
-   
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS turnos (
