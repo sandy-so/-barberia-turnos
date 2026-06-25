@@ -20,8 +20,7 @@ def init_db():
     )
     cursor = conn.cursor()
 
-    cursor.execute("CREATE DATABASE IF NOT EXISTS barberia_turnos")
-    cursor.execute("USE barberia_turnos")
+   
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS turnos (
