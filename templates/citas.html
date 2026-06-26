@@ -43,11 +43,25 @@
     input:focus, select:focus { border-color: #f5c842; }
     select option { background: #222; }
 
+    .fecha-row { display: flex; gap: 8px; align-items: center; }
+    .fecha-row input { flex: 1; }
+    .btn-ver {
+      padding: 13px 14px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 10px;
+      color: #f5c842;
+      cursor: pointer;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+    .btn-ver:hover { background: #2a2a2a; }
+
     .horarios {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      margin-top: 6px;
+      margin-top: 8px;
     }
     .hora-btn {
       padding: 10px 4px;
@@ -64,7 +78,7 @@
     .hora-btn.selected { background: #f5c842; color: #0a0a0a; border-color: #f5c842; font-weight: 700; }
     .hora-btn.ocupado { background: #1a1a1a; color: #444; border-color: #222; cursor: not-allowed; text-decoration: line-through; }
 
-    button.btn-submit {
+    .btn-submit {
       width: 100%;
       padding: 15px;
       background: #f5c842;
@@ -77,22 +91,71 @@
       margin-top: 20px;
       transition: background 0.2s;
     }
-    button.btn-submit:hover { background: #e6b935; }
-    button.btn-submit:disabled { background: #444; color: #777; cursor: not-allowed; }
+    .btn-submit:hover { background: #e6b935; }
+    .btn-submit:disabled { background: #444; color: #777; cursor: not-allowed; }
 
     /* Éxito */
-    #exito { display: none; text-align: center; }
-    .check { font-size: 4rem; margin-bottom: 12px; }
-    .exito-num { font-size: 1.4rem; font-weight: 700; color: #f5c842; margin-bottom: 8px; }
-    .exito-info { color: #888; font-size: 0.9rem; line-height: 1.6; }
-    .btn-nueva { margin-top: 20px; background: #222; color: #f0f0f0; width: 100%; padding: 13px; border: 1px solid #333; border-radius: 10px; cursor: pointer; font-size: 0.95rem; }
+    #exito { display: none; }
+    .check { font-size: 3.5rem; text-align: center; margin-bottom: 12px; }
+    .exito-titulo { font-size: 1.3rem; font-weight: 700; color: #f5c842; text-align: center; margin-bottom: 8px; }
+    .exito-detalle {
+      background: #111;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.88rem;
+      color: #ccc;
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .exito-detalle span { color: #888; }
+
+    .btn-whatsapp {
+      width: 100%;
+      padding: 15px;
+      background: #25d366;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .btn-whatsapp:hover { background: #1ebe5a; }
+
+    .aviso-whatsapp {
+      background: #0d1f14;
+      border: 1px solid #25d366;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      color: #4cdc7a;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .btn-nueva {
+      width: 100%;
+      padding: 13px;
+      background: #222;
+      color: #f0f0f0;
+      border: 1px solid #333;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
     .btn-nueva:hover { background: #2a2a2a; }
 
     .nav-links { text-align: center; margin-top: 16px; }
     .nav-links a { color: #555; font-size: 0.8rem; text-decoration: none; margin: 0 10px; }
     .nav-links a:hover { color: #f5c842; }
 
-    #msg-horarios { color: #666; font-size: 0.8rem; margin-top: 8px; }
+    #msg-horarios { color: #555; font-size: 0.82rem; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -108,7 +171,7 @@
     <input type="text" id="nombre" placeholder="Tu nombre" maxlength="100">
 
     <label>Teléfono *</label>
-    <input type="tel" id="telefono" placeholder="(614) 123-4567" maxlength="20">
+    <input type="tel" id="telefono" placeholder="(656) 123-4567" maxlength="20">
 
     <label>Correo electrónico</label>
     <input type="email" id="email" placeholder="tu@email.com">
@@ -124,14 +187,14 @@
     </select>
 
     <label>Fecha *</label>
-    <div style="display:flex;gap:8px">
-      <input type="date" id="fecha" style="flex:1" onchange="cargarHorarios()" oninput="cargarHorarios()">
-      <button type="button" onclick="cargarHorarios()" style="padding:12px 16px;background:#333;border:1px solid #444;border-radius:10px;color:#f5c842;cursor:pointer;font-size:0.85rem">Ver horarios</button>
+    <div class="fecha-row">
+      <input type="date" id="fecha">
+      <button class="btn-ver" onclick="cargarHorarios()">Ver horarios</button>
     </div>
 
     <label>Hora *</label>
     <div id="horarios-container">
-      <p id="msg-horarios">Selecciona una fecha para ver los horarios</p>
+      <p id="msg-horarios">Selecciona una fecha y presiona "Ver horarios"</p>
     </div>
     <input type="hidden" id="hora-seleccionada">
 
@@ -140,47 +203,67 @@
 
   <div class="card" id="exito">
     <div class="check">✅</div>
-    <div class="exito-num" id="exito-titulo">¡Cita agendada!</div>
-    <div class="exito-info" id="exito-info"></div>
+    <div class="exito-titulo">¡Cita registrada!</div>
+
+    <div class="aviso-whatsapp">
+      📱 Tu cita está <b>pendiente de confirmación</b>. Presiona el botón de WhatsApp para confirmarla con la barbería.
+    </div>
+
+    <div class="exito-detalle" id="exito-info"></div>
+
+    <a id="btn-whatsapp" class="btn-whatsapp" target="_blank">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Confirmar por WhatsApp
+    </a>
+
     <button class="btn-nueva" onclick="nuevaCita()">Agendar otra cita</button>
   </div>
 
   <div class="nav-links">
-    <a href="/">← Turnos</a>
-    <a href="/admin">Panel admin</a>
+    <a href="/">← Ver turnos</a>
   </div>
 
   <script>
-    // Fecha mínima = hoy
+    const WA_NUMBER = '526565996868';
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fecha').min = hoy;
+    document.getElementById('fecha').value = hoy;
 
     async function cargarHorarios() {
       const fecha = document.getElementById('fecha').value;
-      if (!fecha) return;
+      if (!fecha) { alert('Selecciona una fecha primero'); return; }
       document.getElementById('hora-seleccionada').value = '';
+      document.getElementById('horarios-container').innerHTML = '<p id="msg-horarios">Cargando horarios...</p>';
 
-      const res = await fetch(`/api/horarios?fecha=${fecha}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/horarios?fecha=${fecha}`);
+        const data = await res.json();
+        const disponibles = data.disponibles || [];
+        const ocupados = data.ocupados || [];
 
-      const container = document.getElementById('horarios-container');
-      if (data.disponibles.length === 0) {
-        container.innerHTML = '<p id="msg-horarios">No hay horarios disponibles para este día</p>';
-        return;
+        if (disponibles.length === 0) {
+          document.getElementById('horarios-container').innerHTML =
+            '<p id="msg-horarios">No hay horarios disponibles para este día</p>';
+          return;
+        }
+
+        const todos = ['09:00','09:30','10:00','10:30','11:00','11:30',
+                       '12:00','12:30','13:00','13:30','14:00','14:30',
+                       '15:00','15:30','16:00','16:30','17:00','17:30',
+                       '18:00','18:30','19:00','19:30'];
+
+        document.getElementById('horarios-container').innerHTML =
+          '<div class="horarios">' +
+          todos.map(h => {
+            const ocp = ocupados.includes(h);
+            return `<div class="hora-btn ${ocp ? 'ocupado' : ''}"
+              ${ocp ? '' : `onclick="seleccionarHora('${h}', this)"`}>${h}</div>`;
+          }).join('') +
+          '</div>';
+      } catch (e) {
+        document.getElementById('horarios-container').innerHTML =
+          '<p id="msg-horarios" style="color:#e74c3c">Error cargando horarios. Intenta de nuevo.</p>';
       }
-
-      const todos = ['09:00','09:30','10:00','10:30','11:00','11:30',
-                     '12:00','12:30','13:00','13:30','14:00','14:30',
-                     '15:00','15:30','16:00','16:30','17:00','17:30',
-                     '18:00','18:30','19:00','19:30'];
-
-      container.innerHTML = '<div class="horarios">' +
-        todos.map(h => {
-          const ocupado = (data.ocupados || []).includes(h);
-          return `<div class="hora-btn ${ocupado ? 'ocupado' : ''}"
-            onclick="${ocupado ? '' : `seleccionarHora('${h}', this)`}">${h}</div>`;
-        }).join('') +
-      '</div>';
     }
 
     function seleccionarHora(hora, el) {
@@ -214,10 +297,26 @@
         const data = await res.json();
 
         if (data.success) {
+          // Armar mensaje de WhatsApp
+          const msg = `Hola! Quiero confirmar mi cita en Zero Grados Barbershop 💈\n\n` +
+            `👤 Nombre: ${nombre}\n` +
+            `✂️ Servicio: ${servicio}\n` +
+            `📅 Fecha: ${fecha}\n` +
+            `⏰ Hora: ${hora}\n` +
+            `📞 Teléfono: ${telefono}`;
+
+          document.getElementById('btn-whatsapp').href =
+            `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+
+          document.getElementById('exito-info').innerHTML =
+            `<span>Nombre:</span> ${nombre}<br>` +
+            `<span>Servicio:</span> ${servicio}<br>` +
+            `<span>Fecha:</span> ${fecha}<br>` +
+            `<span>Hora:</span> ${hora}<br>` +
+            `<span>Teléfono:</span> ${telefono}`;
+
           document.getElementById('formulario').style.display = 'none';
           document.getElementById('exito').style.display = 'block';
-          document.getElementById('exito-info').innerHTML =
-            `<b>${nombre}</b><br>${servicio}<br>📅 ${fecha} a las ⏰ ${hora}<br><br>Te esperamos en Zero Grados Barbershop`;
         } else {
           alert(data.error || 'Error al agendar');
           btn.disabled = false; btn.textContent = 'Agendar cita';
@@ -229,19 +328,20 @@
     }
 
     function nuevaCita() {
-      document.getElementById('nombre').value = '';
-      document.getElementById('telefono').value = '';
-      document.getElementById('email').value = '';
+      ['nombre','telefono','email'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('servicio').value = '';
-      document.getElementById('fecha').value = '';
+      document.getElementById('fecha').value = hoy;
       document.getElementById('hora-seleccionada').value = '';
       document.getElementById('horarios-container').innerHTML =
-        '<p id="msg-horarios">Selecciona una fecha para ver los horarios</p>';
+        '<p id="msg-horarios">Selecciona una fecha y presiona "Ver horarios"</p>';
       document.getElementById('formulario').style.display = 'block';
       document.getElementById('exito').style.display = 'none';
       document.getElementById('btn-agendar').disabled = false;
       document.getElementById('btn-agendar').textContent = 'Agendar cita';
     }
+
+    // Cargar horarios del día actual al entrar
+    cargarHorarios();
   </script>
 </body>
 </html>
