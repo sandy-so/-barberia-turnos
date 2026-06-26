@@ -3,6 +3,8 @@ from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from database import get_connection, init_db
 import os
+import threading
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,6 +20,68 @@ with app.app_context():
         init_db()
     except Exception as e:
         print(f"DB init error: {e}")
+
+# ─────────────────────────────────────────────
+# TURNO AUTOMÁTICO DESDE CITAS
+# ─────────────────────────────────────────────
+
+def generar_turnos_desde_citas():
+    """Revisa cada minuto si hay citas para la hora actual y genera turno automático"""
+    while True:
+        try:
+            conn = get_connection()
+            cursor = conn.cursor(dictionary=True)
+
+            # Buscar citas confirmadas o pendientes para hoy en la hora actual (±5 min)
+            cursor.execute("""
+                SELECT c.* FROM citas c
+                WHERE c.fecha = CURDATE()
+                AND c.estado IN ('pendiente', 'confirmada')
+                AND TIME(NOW()) BETWEEN SUBTIME(c.hora, '00:05:00') AND ADDTIME(c.hora, '00:05:00')
+                AND NOT EXISTS (
+                    SELECT 1 FROM turnos t
+                    WHERE t.nombre = c.nombre
+                    AND DATE(t.created_at) = CURDATE()
+                    AND t.servicio = c.servicio
+                )
+            """)
+            citas_ahora = cursor.fetchall()
+
+            for cita in citas_ahora:
+                # Calcular número de turno
+                cursor.execute("SELECT MAX(numero) as ultimo FROM turnos WHERE DATE(created_at) = CURDATE()")
+                resultado = cursor.fetchone()
+                ultimo = resultado['ultimo'] or 0
+                nuevo_numero = ultimo + 1
+
+                cursor.execute("""
+                    INSERT INTO turnos (numero, nombre, servicio, estado)
+                    VALUES (%s, %s, %s, 'esperando')
+                """, (nuevo_numero, cita['nombre'], cita['servicio']))
+
+                # Marcar cita como completada (ya generó turno)
+                cursor.execute("UPDATE citas SET estado='confirmada' WHERE id=%s", (cita['id'],))
+
+                conn.commit()
+                print(f"Turno #{nuevo_numero} generado automáticamente para {cita['nombre']} ({cita['servicio']})")
+                socketio.emit('turno_nuevo', {
+                    'numero': nuevo_numero,
+                    'nombre': cita['nombre'],
+                    'servicio': cita['servicio'],
+                    'antes': nuevo_numero - 1
+                })
+
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            print(f"Error en generador de turnos: {e}")
+
+        time.sleep(60)  # Revisar cada minuto
+
+
+# Iniciar hilo en segundo plano
+hilo = threading.Thread(target=generar_turnos_desde_citas, daemon=True)
+hilo.start()
 
 # ─────────────────────────────────────────────
 # PÁGINAS
@@ -235,9 +299,10 @@ def horarios_disponibles():
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT hora FROM citas WHERE fecha=%s AND estado!='cancelada'", (fecha,))
-    ocupados = {row[0] for row in cursor.fetchall()}
+    ocupados = [row[0] for row in cursor.fetchall()]
     cursor.close(); conn.close()
-    return jsonify({'disponibles': [h for h in todos if h not in ocupados]})
+    disponibles = [h for h in todos if h not in ocupados]
+    return jsonify({'disponibles': disponibles, 'ocupados': ocupados})
 
 
 # ─────────────────────────────────────────────
