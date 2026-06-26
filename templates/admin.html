@@ -109,12 +109,13 @@
       document.getElementById('stat-completada').textContent = citas.filter(c => c.estado === 'completada').length;
 
       const lista = document.getElementById('lista-citas');
-      if (citas.length === 0) {
+      if (citasFiltradas.length === 0) {
         lista.innerHTML = '<div id="sin-citas">No hay citas para mostrar</div>';
         return;
       }
 
-      lista.innerHTML = citas.map(c => {
+      const citasFiltradas = citas.filter(c => c.estado !== 'cancelada');
+      lista.innerHTML = citasFiltradas.map(c => {
         const msgWa = encodeURIComponent(
           `Hola ${c.nombre}! Tu cita en Zero Grados está confirmada ✅\n` +
           `✂️ ${c.servicio}\n📅 ${c.fecha} a las ⏰ ${c.hora}\n¡Te esperamos!`

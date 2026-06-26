@@ -225,8 +225,8 @@
 
   <script>
     const WA_NUMBER = '526565996868';
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('fecha').min = hoy;
+    const ahora = new Date();
+    const hoy = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     document.getElementById('fecha').value = hoy;
 
     async function cargarHorarios() {
