@@ -9,40 +9,30 @@
     body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #f0f0f0; padding: 24px 16px; max-width: 600px; margin: auto; }
     h1 { font-size: 1.3rem; font-weight: 700; color: #f5c842; margin-bottom: 4px; }
     p.sub { color: #555; font-size: 0.85rem; margin-bottom: 20px; }
-
     .filtro { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
-    input[type="date"] {
-      flex: 1; padding: 12px 14px; background: #222; border: 1px solid #333;
-      border-radius: 10px; color: #f0f0f0; font-size: 0.9rem; outline: none;
-    }
+    input[type="date"] { flex: 1; padding: 12px 14px; background: #222; border: 1px solid #333; border-radius: 10px; color: #f0f0f0; font-size: 0.9rem; outline: none; }
     input[type="date"]:focus { border-color: #f5c842; }
     .btn-filtro { padding: 12px 20px; background: #f5c842; color: #0a0a0a; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
     .btn-todas { padding: 12px 16px; background: #222; color: #f0f0f0; border: 1px solid #333; border-radius: 10px; cursor: pointer; font-size: 0.9rem; }
-
     .resumen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
     .stat { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px; text-align: center; }
     .stat .num { font-size: 1.6rem; font-weight: 800; color: #f5c842; }
     .stat .lbl { font-size: 0.7rem; color: #666; margin-top: 4px; }
-
     .cita-card { background: #161616; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
     .cita-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .cita-hora { font-size: 1.05rem; font-weight: 800; color: #f5c842; }
     .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .badge-pendiente  { background: #1a1500; color: #f5c842; border: 1px solid #f5c842; }
     .badge-confirmada { background: #001a00; color: #4caf50; border: 1px solid #4caf50; }
-    .badge-cancelada  { background: #1a0000; color: #e74c3c; border: 1px solid #e74c3c; }
     .badge-completada { background: #111; color: #555; border: 1px solid #222; }
-
     .cita-info { font-size: 0.88rem; color: #ccc; line-height: 1.7; }
     .cita-info span { color: #666; }
-
     .acciones { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-    .btn-accion { padding: 7px 14px; border-radius: 8px; border: 1px solid #333; background: #222; color: #f0f0f0; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+    .btn-accion { padding: 7px 14px; border-radius: 8px; border: 1px solid #333; background: #222; color: #f0f0f0; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
     .btn-completar:hover { border-color: #4caf50; color: #4caf50; }
     .btn-cancelar:hover  { border-color: #e74c3c; color: #e74c3c; }
     .btn-wa { background: #0d1f14; border-color: #25d366; color: #25d366; }
     .btn-wa:hover { background: #112b1a; }
-
     #sin-citas { text-align: center; color: #333; padding: 40px; }
     h2.seccion { font-size: 0.8rem; text-transform: uppercase; color: #555; letter-spacing: 1px; margin-bottom: 12px; }
     .nav-links { text-align: center; margin-top: 20px; }
@@ -56,7 +46,7 @@
 
   <div class="filtro">
     <input type="date" id="filtro-fecha">
-    <button class="btn-filtro" onclick="cargarCitas()">Filtrar</button>
+    <button class="btn-filtro" onclick="filtrarPorFecha()">Filtrar</button>
     <button class="btn-todas" onclick="cargarTodas()">Todas</button>
   </div>
 
@@ -78,44 +68,40 @@
 
   <script>
     const WA_NUMBER = '526565996868';
-    const hoy = new Date().toISOString().split('T')[0];
-    document.getElementById('filtro-fecha').value = hoy;
 
-    const estadoBadge = {
-      pendiente: 'badge-pendiente', confirmada: 'badge-confirmada',
-      cancelada: 'badge-cancelada', completada: 'badge-completada'
-    };
-
-    async function cargarCitas() {
+    async function filtrarPorFecha() {
       const fecha = document.getElementById('filtro-fecha').value;
-      const url = fecha ? `/api/citas?fecha=${fecha}` : '/api/citas';
-      const res = await fetch(url);
+      if (!fecha) { cargarTodas(); return; }
+      const res = await fetch(`/api/citas?fecha=${fecha}`);
       const data = await res.json();
       renderCitas(data.citas);
     }
 
     async function cargarTodas() {
-      document.getElementById('filtro-fecha').value = '';
       const res = await fetch('/api/citas');
       const data = await res.json();
       renderCitas(data.citas);
     }
 
     function renderCitas(citas) {
-      document.getElementById('count').textContent = citas.length;
-      document.getElementById('stat-total').textContent = citas.length;
-      document.getElementById('stat-pendiente').textContent  = citas.filter(c => c.estado === 'pendiente').length;
-      document.getElementById('stat-confirmada').textContent = citas.filter(c => c.estado === 'confirmada').length;
-      document.getElementById('stat-completada').textContent = citas.filter(c => c.estado === 'completada').length;
+      // Ocultar canceladas
+      const visibles = citas.filter(c => c.estado !== 'cancelada');
+
+      document.getElementById('count').textContent = visibles.length;
+      document.getElementById('stat-total').textContent = visibles.length;
+      document.getElementById('stat-pendiente').textContent  = visibles.filter(c => c.estado === 'pendiente').length;
+      document.getElementById('stat-confirmada').textContent = visibles.filter(c => c.estado === 'confirmada').length;
+      document.getElementById('stat-completada').textContent = visibles.filter(c => c.estado === 'completada').length;
 
       const lista = document.getElementById('lista-citas');
-      if (citasFiltradas.length === 0) {
+      if (visibles.length === 0) {
         lista.innerHTML = '<div id="sin-citas">No hay citas para mostrar</div>';
         return;
       }
 
-      const citasFiltradas = citas.filter(c => c.estado !== 'cancelada');
-      lista.innerHTML = citasFiltradas.map(c => {
+      const badges = { pendiente: 'badge-pendiente', confirmada: 'badge-confirmada', completada: 'badge-completada' };
+
+      lista.innerHTML = visibles.map(c => {
         const msgWa = encodeURIComponent(
           `Hola ${c.nombre}! Tu cita en Zero Grados está confirmada ✅\n` +
           `✂️ ${c.servicio}\n📅 ${c.fecha} a las ⏰ ${c.hora}\n¡Te esperamos!`
@@ -124,7 +110,7 @@
         <div class="cita-card">
           <div class="cita-header">
             <span class="cita-hora">${c.fecha} — ${c.hora}</span>
-            <span class="badge ${estadoBadge[c.estado]}">${c.estado}</span>
+            <span class="badge ${badges[c.estado] || ''}">${c.estado}</span>
           </div>
           <div class="cita-info">
             <b>${c.nombre}</b><br>
@@ -134,26 +120,25 @@
           </div>
           <div class="acciones">
             <a href="https://wa.me/${c.telefono}?text=${msgWa}" target="_blank" class="btn-accion btn-wa">📱 WhatsApp</a>
-            ${c.estado !== 'completada' && c.estado !== 'cancelada' ?
-              `<button class="btn-accion btn-completar" onclick="cambiarEstado(${c.id},'completada')">✔ Completada</button>` : ''}
-            ${c.estado !== 'cancelada' ?
-              `<button class="btn-accion btn-cancelar" onclick="cambiarEstado(${c.id},'cancelada')">✕ Cancelar</button>` : ''}
+            ${c.estado !== 'completada' ? `<button class="btn-accion btn-completar" onclick="cambiarEstado(${c.id},'completada')">✔ Completada</button>` : ''}
+            <button class="btn-accion btn-cancelar" onclick="cambiarEstado(${c.id},'cancelada')">✕ Cancelar</button>
           </div>
         </div>`;
       }).join('');
     }
 
     async function cambiarEstado(id, estado) {
+      if (estado === 'cancelada' && !confirm('¿Cancelar esta cita?')) return;
       await fetch(`/api/cita/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado })
       });
-      cargarCitas();
+      cargarTodas();
     }
 
-    cargarCitas();
-    setInterval(cargarCitas, 30000);
+    cargarTodas();
+    setInterval(cargarTodas, 30000);
   </script>
 </body>
 </html>
