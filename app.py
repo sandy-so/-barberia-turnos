@@ -70,28 +70,26 @@ def setup():
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
-        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS tipo ENUM('walk-in','cita') DEFAULT 'walk-in'")
-        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
-        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS turno_generado BOOLEAN DEFAULT FALSE")
+        try:
+            cursor.execute("ALTER TABLE turnos ADD COLUMN barbero_id INT NOT NULL DEFAULT 1")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE turnos ADD COLUMN tipo ENUM('walk-in','cita') DEFAULT 'walk-in'")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE citas ADD COLUMN barbero_id INT NOT NULL DEFAULT 1")
+        except: pass
+        try:
+            cursor.execute("ALTER TABLE citas ADD COLUMN turno_generado BOOLEAN DEFAULT FALSE")
+        except: pass
+        try:
+            cursor.execute("INSERT IGNORE INTO barberos (id, nombre) VALUES (1,'Cristian'),(2,'Barbero 2'),(3,'Barbero 3')")
+        except: pass
         conn.commit()
         cursor.close(); conn.close()
-        return "BD actualizada correctamente"
+        return "✅ BD actualizada correctamente"
     except Exception as e:
-        return f"Error: {e}"@app.route('/setup')
-def setup():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
-        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS tipo ENUM('walk-in','cita') DEFAULT 'walk-in'")
-        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
-        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS turno_generado BOOLEAN DEFAULT FALSE")
-        conn.commit()
-        cursor.close(); conn.close()
-        return "BD actualizada correctamente"
-    except Exception as e:
-        return f"Error: {e}"
+        return f"❌ Error: {e}"
 
 @app.route('/')
 def cliente():
