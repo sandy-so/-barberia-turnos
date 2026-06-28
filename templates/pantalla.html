@@ -6,74 +6,87 @@
   <title>Pantalla — Zero Grados</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0a0a0a;
-      color: #f0f0f0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      overflow: hidden;
-    }
-    .logo { font-size: 1.3rem; color: #f5c842; font-weight: 700; letter-spacing: 3px; margin-bottom: 10px; }
-    .label { font-size: 0.9rem; color: #555; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 16px; }
-    .numero {
-      font-size: clamp(9rem, 28vw, 20rem);
-      font-weight: 900;
-      color: #f5c842;
-      line-height: 1;
-      transition: opacity 0.3s;
-    }
-    .nombre { font-size: clamp(1.4rem, 4vw, 3rem); color: #ddd; margin-top: 14px; font-weight: 300; }
-    .servicio { font-size: clamp(0.9rem, 2.5vw, 1.6rem); color: #666; margin-top: 6px; }
-    .footer { position: absolute; bottom: 24px; color: #333; font-size: 0.85rem; }
-    .footer span { color: #f5c842; font-weight: 700; }
-    .sin-turno { font-size: clamp(1.5rem, 5vw, 3rem); color: #2a2a2a; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#f0f0f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    .logo{text-align:center;padding:16px 0 10px;font-size:1.1rem;color:#f5c842;font-weight:700;letter-spacing:3px}
+    .barberos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 16px;flex:1}
+    .barbero-col{background:#111;border:1px solid #222;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center}
+    .barbero-nombre{font-size:clamp(.8rem,2vw,1.1rem);color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+    .turno-num{font-size:clamp(3rem,12vw,8rem);font-weight:900;color:#f5c842;line-height:1}
+    .turno-nombre{font-size:clamp(.8rem,2.5vw,1.4rem);color:#ddd;margin-top:6px}
+    .turno-serv{font-size:clamp(.65rem,1.8vw,1rem);color:#666;margin-top:4px}
+    .sin-turno{font-size:clamp(1rem,3vw,2rem);color:#2a2a2a}
+    .footer{text-align:center;padding:10px;font-size:.8rem;color:#333}
+    .footer span{color:#f5c842;font-weight:700}
+    .tipo-cita{font-size:.7rem;color:#4caf50;margin-top:4px}
   </style>
 </head>
 <body>
-  <div class="logo">✂ ZERO GRADOS BARBERSHOP</div>
-  <div class="label">Atendiendo ahora</div>
-  <div id="contenido">
-    <div class="sin-turno">Esperando turno...</div>
-  </div>
-  <div class="footer">En espera: <span id="count-espera">0</span></div>
+<div class="logo">✂ ZERO GRADOS BARBERSHOP</div>
+<div class="barberos-grid" id="barberos-grid"></div>
+<div class="footer">Total en espera: <span id="total-espera">0</span></div>
 
-  <script>
-    const socket = io();
-    socket.on('turno_cambiado', cargarTodo);
-    socket.on('turno_nuevo', cargarTodo);
-    socket.on('turno_cancelado', cargarTodo);
+<script>
+const socket = io();
+socket.on('turno_cambiado', cargarTodo);
+socket.on('turno_nuevo', cargarTodo);
+socket.on('turno_cancelado', cargarTodo);
 
-    async function cargarTodo() {
-      const [r1, r2] = await Promise.all([
-        fetch('/api/turno/actual'),
-        fetch('/api/turno/lista')
-      ]);
-      const { turno_actual } = await r1.json();
-      const { turnos } = await r2.json();
+let barberos = [];
 
-      const enEspera = turnos.filter(t => t.estado === 'esperando').length;
-      document.getElementById('count-espera').textContent = enEspera;
+async function cargarBarberos() {
+  const res = await fetch('/api/barberos');
+  const data = await res.json();
+  barberos = data.barberos;
+  renderCols();
+  cargarTodo();
+}
 
-      const c = document.getElementById('contenido');
-      if (turno_actual) {
-        c.innerHTML = `
-          <div class="numero">#${turno_actual.numero}</div>
-          <div class="nombre">${turno_actual.nombre}</div>
-          <div class="servicio">${turno_actual.servicio}</div>
-        `;
-      } else {
-        c.innerHTML = '<div class="sin-turno">Sin turno activo</div>';
-      }
+function renderCols() {
+  const grid = document.getElementById('barberos-grid');
+  grid.innerHTML = barberos.map(b => `
+    <div class="barbero-col" id="col-${b.id}">
+      <div class="barbero-nombre">${b.nombre}</div>
+      <div class="sin-turno" id="num-${b.id}">—</div>
+    </div>`).join('');
+}
+
+async function cargarTodo() {
+  const [r1, r2] = await Promise.all([
+    fetch('/api/turno/lista'),
+    fetch('/api/turno/actual')
+  ]);
+  const {turnos} = await r1.json();
+  const {turno_actual} = await r2.json();
+
+  let totalEspera = 0;
+  for (const b of barberos) {
+    const actual = turnos.find(t => t.barbero_id===b.id && t.estado==='en_atencion')
+                || (turno_actual && turno_actual.barbero_id===b.id ? turno_actual : null);
+    const espera = turnos.filter(t => t.barbero_id===b.id && t.estado==='esperando').length;
+    totalEspera += espera;
+    const col = document.getElementById(`col-${b.id}`);
+    if (!col) continue;
+    if (actual) {
+      col.innerHTML = `
+        <div class="barbero-nombre">${b.nombre}</div>
+        <div class="turno-num">#${actual.numero}</div>
+        <div class="turno-nombre">${actual.nombre}</div>
+        <div class="turno-serv">${actual.servicio}</div>
+        ${actual.tipo==='cita'?'<div class="tipo-cita">📅 Con cita</div>':''}
+        <div style="margin-top:8px;font-size:.72rem;color:#444">En espera: ${espera}</div>`;
+    } else {
+      col.innerHTML = `
+        <div class="barbero-nombre">${b.nombre}</div>
+        <div class="sin-turno">—</div>
+        <div style="margin-top:8px;font-size:.72rem;color:#444">En espera: ${espera}</div>`;
     }
+  }
+  document.getElementById('total-espera').textContent = totalEspera;
+}
 
-    cargarTodo();
-    setInterval(cargarTodo, 10000);
-  </script>
+cargarBarberos();
+setInterval(cargarTodo, 10000);
+</script>
 </body>
 </html>

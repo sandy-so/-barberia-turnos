@@ -3,213 +3,190 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tomar Turno — Zero Grados Barbershop</title>
+  <title>Turno — Zero Grados</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0a0a0a;
-      color: #f0f0f0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 24px 16px;
-    }
-    header { text-align: center; margin-bottom: 20px; }
-    header h1 { font-size: 1.5rem; font-weight: 700; color: #f5c842; letter-spacing: 1px; }
-    header p { font-size: 0.85rem; color: #888; margin-top: 4px; }
-
-    .card {
-      background: #161616;
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
-      padding: 24px;
-      width: 100%;
-      max-width: 420px;
-      margin-bottom: 16px;
-    }
-    .card h2 { font-size: 0.8rem; color: #666; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 1px; }
-
-    input, select {
-      width: 100%;
-      padding: 14px 16px;
-      background: #222;
-      border: 1px solid #333;
-      border-radius: 10px;
-      color: #f0f0f0;
-      font-size: 1rem;
-      margin-bottom: 12px;
-      outline: none;
-      transition: border 0.2s;
-    }
-    input:focus, select:focus { border-color: #f5c842; }
-    select option { background: #222; }
-
-    button {
-      width: 100%;
-      padding: 15px;
-      background: #f5c842;
-      color: #0a0a0a;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    button:hover { background: #e6b935; }
-    button:disabled { background: #444; color: #777; cursor: not-allowed; }
-
-    #resultado { display: none; }
-    .numero-turno {
-      font-size: 5.5rem;
-      font-weight: 900;
-      color: #f5c842;
-      text-align: center;
-      line-height: 1;
-      margin: 12px 0 6px;
-    }
-    .turno-label { text-align: center; color: #666; font-size: 0.8rem; margin-bottom: 20px; }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #2a2a2a;
-      font-size: 0.9rem;
-    }
-    .info-row:last-of-type { border-bottom: none; }
-    .info-row span:first-child { color: #888; }
-    .info-row span:last-child { font-weight: 600; }
-
-    .badge {
-      display: block;
-      width: fit-content;
-      margin: 14px auto 0;
-      background: #1a1a00;
-      border: 1px solid #f5c842;
-      color: #f5c842;
-      border-radius: 20px;
-      padding: 6px 18px;
-      font-size: 0.85rem;
-    }
-    .btn-nuevo { margin-top: 14px; background: #222; color: #f0f0f0; }
-    .btn-nuevo:hover { background: #2a2a2a; }
-
-    #turno-actual-box {
-      background: #111;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      width: 100%;
-      max-width: 420px;
-      margin-bottom: 14px;
-    }
-    #turno-actual-box p { color: #555; font-size: 0.75rem; margin-bottom: 4px; }
-    #turno-actual-box strong { font-size: 1.2rem; color: #f5c842; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#f0f0f0;min-height:100vh;padding:24px 16px}
+    header{text-align:center;margin-bottom:20px}
+    header h1{font-size:1.5rem;font-weight:700;color:#f5c842}
+    header p{font-size:.85rem;color:#666;margin-top:4px}
+    .card{background:#161616;border:1px solid #2a2a2a;border-radius:16px;padding:22px;max-width:440px;margin:0 auto 16px}
+    .card h2{font-size:.78rem;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+    label{display:block;font-size:.78rem;color:#888;margin-bottom:6px;margin-top:12px}
+    input,select{width:100%;padding:13px 16px;background:#222;border:1px solid #333;border-radius:10px;color:#f0f0f0;font-size:.95rem;outline:none;transition:border .2s}
+    input:focus,select:focus{border-color:#f5c842}
+    select option{background:#222}
+    .barberos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+    .barbero-btn{padding:12px 6px;background:#222;border:1px solid #333;border-radius:10px;color:#f0f0f0;font-size:.82rem;cursor:pointer;text-align:center;transition:all .2s}
+    .barbero-btn:hover{border-color:#f5c842;color:#f5c842}
+    .barbero-btn.selected{background:#f5c842;color:#0a0a0a;border-color:#f5c842;font-weight:700}
+    .btn-submit{width:100%;padding:15px;background:#f5c842;color:#0a0a0a;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:18px;transition:background .2s}
+    .btn-submit:hover{background:#e6b935}
+    .btn-submit:disabled{background:#444;color:#777;cursor:not-allowed}
+    #resultado{display:none}
+    .numero-turno{font-size:5rem;font-weight:900;color:#f5c842;text-align:center;line-height:1;margin:10px 0 4px}
+    .turno-label{text-align:center;color:#666;font-size:.8rem;margin-bottom:18px}
+    .info-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #2a2a2a;font-size:.9rem}
+    .info-row:last-of-type{border-bottom:none}
+    .info-row span:first-child{color:#777}
+    .badge{display:block;width:fit-content;margin:12px auto 0;border-radius:20px;padding:6px 18px;font-size:.82rem}
+    .badge-espera{background:#1a1a00;border:1px solid #f5c842;color:#f5c842}
+    .badge-alerta{background:#001a00;border:1px solid #4caf50;color:#4caf50}
+    .btn-nueva{margin-top:14px;background:#222;color:#f0f0f0;width:100%;padding:12px;border:1px solid #333;border-radius:10px;cursor:pointer}
+    .actual-box{background:#111;border:1px solid #2a2a2a;border-radius:12px;padding:12px;text-align:center;max-width:440px;margin:0 auto 14px}
+    .actual-box p{color:#444;font-size:.72rem;margin-bottom:3px}
+    .actual-box strong{font-size:1.1rem;color:#f5c842}
+    .nav-links{text-align:center;margin-top:16px}
+    .nav-links a{color:#444;font-size:.78rem;text-decoration:none;margin:0 8px}
+    .nav-links a:hover{color:#f5c842}
+    .aviso-cita{background:#001a00;border:1px solid #4caf50;border-radius:10px;padding:10px 14px;font-size:.8rem;color:#4caf50;margin-top:10px}
   </style>
 </head>
 <body>
-  <header>
-    <h1>✂️ Zero Grados Barbershop</h1>
-    <p>Sistema de turnos</p>
-  </header>
+<header>
+  <h1>✂️ Zero Grados Barbershop</h1>
+  <p>Sistema de turnos</p>
+</header>
 
-  <div id="turno-actual-box">
-    <p>Atendiendo ahora</p>
-    <strong id="display-actual">—</strong>
+<div class="actual-box">
+  <p>Atendiendo ahora</p>
+  <strong id="display-actual">—</strong>
+</div>
+
+<div class="card" id="formulario">
+  <h2>Tomar turno</h2>
+  <label>Tu nombre *</label>
+  <input type="text" id="nombre" placeholder="Tu nombre" maxlength="50">
+  <label>Servicio *</label>
+  <select id="servicio">
+    <option value="">Selecciona un servicio</option>
+    <option value="Corte clásico">Corte clásico</option>
+    <option value="Corte + barba">Corte + barba</option>
+    <option value="Barba">Barba</option>
+    <option value="Degradado">Degradado</option>
+    <option value="Afeitado clásico">Afeitado clásico</option>
+  </select>
+  <label>Barbero *</label>
+  <div class="barberos-grid" id="barberos-grid">
+    <div style="color:#555;font-size:.8rem">Cargando...</div>
   </div>
-
-  <div class="card" id="formulario">
-    <h2>Tomar turno</h2>
-    <input type="text" id="nombre" placeholder="Tu nombre" maxlength="50">
-    <select id="servicio">
-      <option value="">Selecciona un servicio</option>
-      <option value="Corte clásico">Corte clásico</option>
-      <option value="Corte + barba">Corte + barba</option>
-      <option value="Barba">Barba</option>
-      <option value="Degradado">Degradado</option>
-      <option value="Afeitado clásico">Afeitado clásico</option>
-    </select>
-    <button id="btn-tomar" onclick="tomarTurno()">Tomar turno</button>
+  <input type="hidden" id="barbero-id">
+  <div id="aviso-cita" style="display:none" class="aviso-cita">
+    ⚠️ Hay citas agendadas próximas con este barbero. Tu turno irá después de ellas.
   </div>
+  <button class="btn-submit" id="btn-tomar" onclick="tomarTurno()">Tomar turno</button>
+</div>
 
-  <div class="card" id="resultado">
-    <div class="numero-turno" id="mi-numero">—</div>
-    <div class="turno-label">tu número de turno</div>
-    <div class="info-row"><span>Nombre</span><span id="res-nombre">—</span></div>
-    <div class="info-row"><span>Servicio</span><span id="res-servicio">—</span></div>
-    <div class="info-row"><span>Personas antes</span><span id="res-antes">—</span></div>
-    <div class="badge" id="badge-espera">Espera tu turno</div>
-    <button class="btn-nuevo" onclick="nuevoTurno()">Tomar otro turno</button>
-  </div>
+<div class="card" id="resultado">
+  <div class="numero-turno" id="mi-numero">—</div>
+  <div class="turno-label">tu número de turno</div>
+  <div class="info-row"><span>Nombre</span><span id="res-nombre">—</span></div>
+  <div class="info-row"><span>Servicio</span><span id="res-servicio">—</span></div>
+  <div class="info-row"><span>Barbero</span><span id="res-barbero">—</span></div>
+  <div class="info-row"><span>Personas antes</span><span id="res-antes">—</span></div>
+  <div class="badge badge-espera" id="badge-espera">Espera tu turno</div>
+  <button class="btn-nueva" onclick="nuevoTurno()">Tomar otro turno</button>
+</div>
 
-  <script>
-    const socket = io();
-    let miTurno = null;
+<div class="nav-links">
+  <a href="/citas">📅 Agendar cita</a>
+  <a href="/pantalla">📺 Pantalla</a>
+</div>
 
-    socket.on('turno_cambiado', data => {
-      const t = data.turno_actual;
-      document.getElementById('display-actual').textContent = t ? `Turno #${t.numero} — ${t.nombre}` : '—';
-      if (miTurno) actualizarPosicion();
+<script>
+const socket = io();
+let miTurno = null, miBarbero = null;
+
+socket.on('turno_cambiado', d => { cargarActual(); if(miTurno) actualizarPosicion(); });
+socket.on('turno_nuevo', d => { if(miTurno) actualizarPosicion(); });
+
+async function cargarBarberos() {
+  const res = await fetch('/api/barberos');
+  const data = await res.json();
+  const grid = document.getElementById('barberos-grid');
+  grid.innerHTML = data.barberos.map(b =>
+    `<div class="barbero-btn" onclick="seleccionarBarbero(${b.id},'${b.nombre}',this)">${b.nombre}</div>`
+  ).join('');
+}
+
+function seleccionarBarbero(id, nombre, el) {
+  document.querySelectorAll('.barbero-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('barbero-id').value = id;
+  miBarbero = {id, nombre};
+  verificarCitasProximas(id);
+}
+
+async function verificarCitasProximas(barberoId) {
+  const res = await fetch(`/api/turno/lista?barbero_id=${barberoId}`);
+  const data = await res.json();
+  const conCita = data.turnos.filter(t => t.tipo === 'cita').length;
+  document.getElementById('aviso-cita').style.display = conCita > 0 ? 'block' : 'none';
+}
+
+async function tomarTurno() {
+  const nombre = document.getElementById('nombre').value.trim();
+  const servicio = document.getElementById('servicio').value;
+  const barbero_id = document.getElementById('barbero-id').value;
+  if (!nombre || !servicio || !barbero_id) { alert('Completa todos los campos y selecciona un barbero'); return; }
+  const btn = document.getElementById('btn-tomar');
+  btn.disabled = true; btn.textContent = 'Registrando...';
+  try {
+    const res = await fetch('/api/turno', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({nombre, servicio, barbero_id: parseInt(barbero_id)})
     });
-    socket.on('turno_nuevo', () => { if (miTurno) actualizarPosicion(); });
-
-    async function tomarTurno() {
-      const nombre = document.getElementById('nombre').value.trim();
-      const servicio = document.getElementById('servicio').value;
-      if (!nombre || !servicio) { alert('Ingresa tu nombre y selecciona un servicio'); return; }
-      const btn = document.getElementById('btn-tomar');
-      btn.disabled = true; btn.textContent = 'Registrando...';
-      try {
-        const res = await fetch('/api/turno', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, servicio })
-        });
-        const data = await res.json();
-        if (data.success) { miTurno = data.turno.numero; mostrarResultado(data.turno); }
-      } catch (e) {
-        alert('Error al registrar. Intenta de nuevo.');
-        btn.disabled = false; btn.textContent = 'Tomar turno';
-      }
+    const data = await res.json();
+    if (data.success) {
+      miTurno = data.turno.numero; miBarbero = {id: parseInt(barbero_id), nombre: data.turno.barbero_nombre};
+      mostrarResultado(data.turno);
     }
+  } catch(e) {
+    alert('Error al registrar. Intenta de nuevo.');
+    btn.disabled = false; btn.textContent = 'Tomar turno';
+  }
+}
 
-    function mostrarResultado(turno) {
-      document.getElementById('formulario').style.display = 'none';
-      document.getElementById('resultado').style.display = 'block';
-      document.getElementById('mi-numero').textContent = `#${turno.numero}`;
-      document.getElementById('res-nombre').textContent = turno.nombre;
-      document.getElementById('res-servicio').textContent = turno.servicio;
-      document.getElementById('res-antes').textContent = turno.antes === 0 ? 'Eres el siguiente' : turno.antes;
-    }
+function mostrarResultado(t) {
+  document.getElementById('formulario').style.display = 'none';
+  document.getElementById('resultado').style.display = 'block';
+  document.getElementById('mi-numero').textContent = `#${t.numero}`;
+  document.getElementById('res-nombre').textContent = t.nombre;
+  document.getElementById('res-servicio').textContent = t.servicio;
+  document.getElementById('res-barbero').textContent = t.barbero_nombre;
+  document.getElementById('res-antes').textContent = t.antes === 0 ? 'Eres el siguiente' : t.antes;
+}
 
-    async function actualizarPosicion() {
-      const res = await fetch(`/api/turno/posicion/${miTurno}`);
-      const data = await res.json();
-      document.getElementById('res-antes').textContent = data.antes === 0 ? '¡Eres el siguiente!' : data.antes;
-      document.getElementById('badge-espera').textContent = data.antes === 0 ? '🔔 ¡Prepárate!' : 'Espera tu turno';
-    }
+async function actualizarPosicion() {
+  const res = await fetch(`/api/turno/posicion/${miTurno}?barbero_id=${miBarbero.id}`);
+  const data = await res.json();
+  document.getElementById('res-antes').textContent = data.antes === 0 ? '¡Eres el siguiente!' : data.antes;
+  document.getElementById('badge-espera').textContent = data.antes === 0 ? '🔔 ¡Prepárate!' : 'Espera tu turno';
+}
 
-    function nuevoTurno() {
-      miTurno = null;
-      document.getElementById('nombre').value = '';
-      document.getElementById('servicio').value = '';
-      document.getElementById('formulario').style.display = 'block';
-      document.getElementById('resultado').style.display = 'none';
-      document.getElementById('btn-tomar').disabled = false;
-      document.getElementById('btn-tomar').textContent = 'Tomar turno';
-    }
+function nuevoTurno() {
+  miTurno = null; miBarbero = null;
+  document.getElementById('nombre').value = '';
+  document.getElementById('servicio').value = '';
+  document.getElementById('barbero-id').value = '';
+  document.querySelectorAll('.barbero-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('aviso-cita').style.display = 'none';
+  document.getElementById('formulario').style.display = 'block';
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('btn-tomar').disabled = false;
+  document.getElementById('btn-tomar').textContent = 'Tomar turno';
+}
 
-    async function cargarActual() {
-      const res = await fetch('/api/turno/actual');
-      const data = await res.json();
-      const t = data.turno_actual;
-      document.getElementById('display-actual').textContent = t ? `Turno #${t.numero} — ${t.nombre}` : '—';
-    }
-    cargarActual();
-  </script>
+async function cargarActual() {
+  const res = await fetch('/api/turno/actual');
+  const data = await res.json();
+  const t = data.turno_actual;
+  document.getElementById('display-actual').textContent = t ? `#${t.numero} ${t.nombre} (${t.barbero_nombre})` : '—';
+}
+
+cargarBarberos();
+cargarActual();
+</script>
 </body>
 </html>

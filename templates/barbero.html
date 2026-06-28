@@ -6,75 +6,52 @@
   <title>Panel Barbero — Zero Grados</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0a0a0a; color: #f0f0f0; padding: 24px 16px; max-width: 480px; margin: auto; }
-    h1 { font-size: 1.3rem; font-weight: 700; color: #f5c842; margin-bottom: 4px; }
-    p.sub { color: #555; font-size: 0.85rem; margin-bottom: 24px; }
-
-    .turno-actual {
-      background: #161600;
-      border: 2px solid #f5c842;
-      border-radius: 16px;
-      padding: 24px;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .turno-actual p { color: #888; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-    .turno-actual .num { font-size: 4rem; font-weight: 900; color: #f5c842; line-height: 1; }
-    .turno-actual .detalle { font-size: 0.95rem; color: #ccc; margin-top: 8px; }
-
-    .btn-siguiente {
-      width: 100%;
-      padding: 18px;
-      background: #f5c842;
-      color: #0a0a0a;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.05rem;
-      font-weight: 800;
-      cursor: pointer;
-      margin-bottom: 24px;
-      transition: background 0.2s;
-    }
-    .btn-siguiente:hover { background: #e6b935; }
-
-    h2 { font-size: 0.8rem; text-transform: uppercase; color: #555; letter-spacing: 1px; margin-bottom: 12px; }
-    .lista { display: flex; flex-direction: column; gap: 10px; }
-    .item {
-      background: #161616;
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
-      padding: 14px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .item .num-s { font-size: 1.2rem; font-weight: 800; color: #f5c842; min-width: 44px; }
-    .item .info { flex: 1; padding: 0 10px; }
-    .item .info .nombre { font-size: 0.9rem; font-weight: 600; }
-    .item .info .serv { font-size: 0.78rem; color: #777; }
-    .btn-cancel {
-      background: transparent;
-      border: 1px solid #2a2a2a;
-      color: #666;
-      border-radius: 8px;
-      padding: 6px 10px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-cancel:hover { border-color: #e74c3c; color: #e74c3c; }
-    #sin-turnos { text-align: center; color: #333; font-size: 0.9rem; padding: 24px; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#f0f0f0;padding:20px 16px;max-width:480px;margin:auto}
+    h1{font-size:1.2rem;font-weight:700;color:#f5c842;margin-bottom:4px}
+    p.sub{color:#555;font-size:.82rem;margin-bottom:16px}
+    .barberos-sel{display:flex;gap:8px;margin-bottom:20px}
+    .sel-btn{flex:1;padding:11px 6px;background:#161616;border:1px solid #2a2a2a;border-radius:10px;color:#888;font-size:.82rem;cursor:pointer;text-align:center;transition:all .2s}
+    .sel-btn.active{background:#1a1500;border-color:#f5c842;color:#f5c842;font-weight:700}
+    .turno-actual{background:#161600;border:2px solid #f5c842;border-radius:16px;padding:22px;text-align:center;margin-bottom:16px}
+    .turno-actual p{color:#777;font-size:.72rem;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .num{font-size:3.8rem;font-weight:900;color:#f5c842;line-height:1}
+    .detalle{font-size:.9rem;color:#ccc;margin-top:6px}
+    .tipo-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;margin-top:6px}
+    .tipo-cita{background:#001a00;color:#4caf50;border:1px solid #4caf50}
+    .tipo-walkin{background:#111;color:#777;border:1px solid #333}
+    .btn-siguiente{width:100%;padding:17px;background:#f5c842;color:#0a0a0a;border:none;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:22px;transition:background .2s}
+    .btn-siguiente:hover{background:#e6b935}
+    h2{font-size:.78rem;text-transform:uppercase;color:#444;letter-spacing:1px;margin-bottom:10px}
+    .lista{display:flex;flex-direction:column;gap:10px}
+    .item{background:#161616;border:1px solid #2a2a2a;border-radius:10px;padding:13px 15px;display:flex;justify-content:space-between;align-items:center}
+    .item .num-s{font-size:1.1rem;font-weight:800;color:#f5c842;min-width:40px}
+    .item .info{flex:1;padding:0 10px}
+    .item .info .nombre{font-size:.88rem;font-weight:600}
+    .item .info .serv{font-size:.76rem;color:#666}
+    .item .info .cita-tag{font-size:.7rem;color:#4caf50}
+    .btn-cancel{background:transparent;border:1px solid #2a2a2a;color:#555;border-radius:8px;padding:5px 9px;font-size:.72rem;cursor:pointer}
+    .btn-cancel:hover{border-color:#e74c3c;color:#e74c3c}
+    #sin-turnos{text-align:center;color:#333;font-size:.88rem;padding:20px}
+    .nav-links{text-align:center;margin-top:20px}
+    .nav-links a{color:#444;font-size:.78rem;text-decoration:none;margin:0 8px}
+    .nav-links a:hover{color:#f5c842}
   </style>
 </head>
 <body>
-  <h1>✂️ Panel del Barbero</h1>
-  <p class="sub">Gestión de turnos del día</p>
+<h1>✂️ Panel del Barbero</h1>
+<p class="sub">Selecciona tu nombre</p>
 
+<div class="barberos-sel" id="barberos-sel">
+  <div style="color:#555;font-size:.8rem">Cargando...</div>
+</div>
+
+<div id="panel" style="display:none">
   <div class="turno-actual">
     <p>Atendiendo ahora</p>
     <div class="num" id="num-actual">—</div>
     <div class="detalle" id="detalle-actual">Sin turno activo</div>
+    <div id="tipo-actual"></div>
   </div>
 
   <button class="btn-siguiente" onclick="siguienteTurno()">▶ Llamar siguiente turno</button>
@@ -83,59 +60,88 @@
   <div class="lista" id="lista-turnos">
     <div id="sin-turnos">No hay turnos en espera</div>
   </div>
+</div>
 
-  <script>
-    const socket = io();
-    socket.on('turno_cambiado', cargarTodo);
-    socket.on('turno_nuevo', cargarTodo);
-    socket.on('turno_cancelado', cargarTodo);
+<div class="nav-links">
+  <a href="/">← Turnos</a>
+  <a href="/pantalla">Pantalla</a>
+</div>
 
-    async function cargarTodo() {
-      const [r1, r2] = await Promise.all([
-        fetch('/api/turno/actual'),
-        fetch('/api/turno/lista')
-      ]);
-      const { turno_actual } = await r1.json();
-      const { turnos } = await r2.json();
+<script>
+const socket = io();
+let barberoActivo = null;
 
-      if (turno_actual) {
-        document.getElementById('num-actual').textContent = `#${turno_actual.numero}`;
-        document.getElementById('detalle-actual').textContent = `${turno_actual.nombre} — ${turno_actual.servicio}`;
-      } else {
-        document.getElementById('num-actual').textContent = '—';
-        document.getElementById('detalle-actual').textContent = 'Sin turno activo';
-      }
+socket.on('turno_cambiado', d => { if(barberoActivo && d.barbero_id == barberoActivo.id) cargarTodo(); });
+socket.on('turno_nuevo', d => { if(barberoActivo && d.barbero_id == barberoActivo.id) cargarTodo(); });
+socket.on('turno_cancelado', () => { if(barberoActivo) cargarTodo(); });
 
-      const enEspera = turnos.filter(t => t.estado === 'esperando');
-      document.getElementById('count').textContent = enEspera.length;
+async function cargarBarberos() {
+  const res = await fetch('/api/barberos');
+  const data = await res.json();
+  const sel = document.getElementById('barberos-sel');
+  sel.innerHTML = data.barberos.map(b =>
+    `<div class="sel-btn" onclick="seleccionarBarbero(${b.id},'${b.nombre}',this)">${b.nombre}</div>`
+  ).join('');
+}
 
-      const lista = document.getElementById('lista-turnos');
-      if (enEspera.length === 0) {
-        lista.innerHTML = '<div id="sin-turnos">No hay turnos en espera</div>';
-        return;
-      }
-      lista.innerHTML = enEspera.map(t => `
-        <div class="item">
-          <span class="num-s">#${t.numero}</span>
-          <div class="info">
-            <div class="nombre">${t.nombre}</div>
-            <div class="serv">${t.servicio}</div>
-          </div>
-          <button class="btn-cancel" onclick="cancelar(${t.id})">Cancelar</button>
-        </div>
-      `).join('');
-    }
+function seleccionarBarbero(id, nombre, el) {
+  document.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  barberoActivo = {id, nombre};
+  document.getElementById('panel').style.display = 'block';
+  cargarTodo();
+}
 
-    async function siguienteTurno() {
-      await fetch('/api/turno/siguiente', { method: 'PUT' });
-    }
+async function cargarTodo() {
+  if (!barberoActivo) return;
+  const [r1, r2] = await Promise.all([
+    fetch(`/api/turno/actual?barbero_id=${barberoActivo.id}`),
+    fetch(`/api/turno/lista?barbero_id=${barberoActivo.id}`)
+  ]);
+  const {turno_actual} = await r1.json();
+  const {turnos} = await r2.json();
 
-    async function cancelar(id) {
-      if (!confirm('¿Cancelar este turno?')) return;
-      await fetch(`/api/turno/cancelar/${id}`, { method: 'PUT' });
-    }
+  if (turno_actual) {
+    document.getElementById('num-actual').textContent = `#${turno_actual.numero}`;
+    document.getElementById('detalle-actual').textContent = `${turno_actual.nombre} — ${turno_actual.servicio}`;
+    document.getElementById('tipo-actual').innerHTML =
+      `<span class="tipo-badge ${turno_actual.tipo==='cita'?'tipo-cita':'tipo-walkin'}">${turno_actual.tipo==='cita'?'📅 Con cita':'🚶 Walk-in'}</span>`;
+  } else {
+    document.getElementById('num-actual').textContent = '—';
+    document.getElementById('detalle-actual').textContent = 'Sin turno activo';
+    document.getElementById('tipo-actual').innerHTML = '';
+  }
 
-    cargarTodo();
-  </script>
+  const enEspera = turnos.filter(t => t.estado==='esperando');
+  document.getElementById('count').textContent = enEspera.length;
+  const lista = document.getElementById('lista-turnos');
+  if (enEspera.length===0) { lista.innerHTML = '<div id="sin-turnos">No hay turnos en espera</div>'; return; }
+  lista.innerHTML = enEspera.map(t => `
+    <div class="item">
+      <span class="num-s">#${t.numero}</span>
+      <div class="info">
+        <div class="nombre">${t.nombre}</div>
+        <div class="serv">${t.servicio}</div>
+        <div class="cita-tag">${t.tipo==='cita'?'📅 Con cita':''}</div>
+      </div>
+      <button class="btn-cancel" onclick="cancelar(${t.id})">Cancelar</button>
+    </div>`).join('');
+}
+
+async function siguienteTurno() {
+  if (!barberoActivo) return;
+  await fetch('/api/turno/siguiente', {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({barbero_id: barberoActivo.id})
+  });
+}
+
+async function cancelar(id) {
+  if (!confirm('¿Cancelar este turno?')) return;
+  await fetch(`/api/turno/cancelar/${id}`, {method:'PUT'});
+}
+
+cargarBarberos();
+</script>
 </body>
 </html>
