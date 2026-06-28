@@ -65,6 +65,34 @@ hilo.start()
 # PÁGINAS
 # ─────────────────────────────────────────────
 
+@app.route('/setup')
+def setup():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
+        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS tipo ENUM('walk-in','cita') DEFAULT 'walk-in'")
+        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
+        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS turno_generado BOOLEAN DEFAULT FALSE")
+        conn.commit()
+        cursor.close(); conn.close()
+        return "BD actualizada correctamente"
+    except Exception as e:
+        return f"Error: {e}"@app.route('/setup')
+def setup():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
+        cursor.execute("ALTER TABLE turnos ADD COLUMN IF NOT EXISTS tipo ENUM('walk-in','cita') DEFAULT 'walk-in'")
+        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS barbero_id INT NOT NULL DEFAULT 1")
+        cursor.execute("ALTER TABLE citas ADD COLUMN IF NOT EXISTS turno_generado BOOLEAN DEFAULT FALSE")
+        conn.commit()
+        cursor.close(); conn.close()
+        return "BD actualizada correctamente"
+    except Exception as e:
+        return f"Error: {e}"
+
 @app.route('/')
 def cliente():
     return render_template('cliente.html')
