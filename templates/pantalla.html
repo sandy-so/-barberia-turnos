@@ -6,25 +6,186 @@
   <title>Pantalla — Zero Grados</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',sans-serif;background:#0a0a0a;color:#f0f0f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-    .logo{text-align:center;padding:16px 0 10px;font-size:1.1rem;color:#f5c842;font-weight:700;letter-spacing:3px}
-    .barberos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 16px;flex:1}
-    .barbero-col{background:#111;border:1px solid #222;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center}
-    .barbero-nombre{font-size:clamp(.8rem,2vw,1.1rem);color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
-    .turno-num{font-size:clamp(3rem,12vw,8rem);font-weight:900;color:#f5c842;line-height:1}
-    .turno-nombre{font-size:clamp(.8rem,2.5vw,1.4rem);color:#ddd;margin-top:6px}
-    .turno-serv{font-size:clamp(.65rem,1.8vw,1rem);color:#666;margin-top:4px}
-    .sin-turno{font-size:clamp(1rem,3vw,2rem);color:#2a2a2a}
-    .footer{text-align:center;padding:10px;font-size:.8rem;color:#333}
-    .footer span{color:#f5c842;font-weight:700}
-    .tipo-cita{font-size:.7rem;color:#4caf50;margin-top:4px}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      background: #080808;
+      color: #f0f0f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      border-bottom: 1px solid #1a1a1a;
+      background: #0a0a0a;
+    }
+    .logo { font-size: 1.1rem; font-weight: 700; color: #f5c842; letter-spacing: 3px; }
+    .reloj { font-size: 1.4rem; font-weight: 300; color: #888; letter-spacing: 2px; }
+    .total-badge {
+      background: #1a1500;
+      border: 1px solid #f5c842;
+      color: #f5c842;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    /* GRID */
+    .barberos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      padding: 14px;
+      flex: 1;
+    }
+
+    .col {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: border-color .3s;
+    }
+    .col.activo { border-color: #f5c842; }
+
+    .col-header {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .barbero-nombre {
+      font-size: clamp(.7rem, 1.5vw, .95rem);
+      font-weight: 700;
+      color: #888;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .disponible-badge {
+      font-size: .65rem;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .badge-libre { background: #001a00; color: #4caf50; border: 1px solid #4caf50; }
+    .badge-ocupado { background: #1a0a00; color: #f5a742; border: 1px solid #f5a742; }
+
+    /* TURNO ACTUAL */
+    .turno-actual-box {
+      padding: 16px 18px 12px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .label-actual { font-size: .65rem; color: #444; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+    .turno-num {
+      font-size: clamp(3.5rem, 10vw, 7rem);
+      font-weight: 900;
+      color: #f5c842;
+      line-height: 1;
+      transition: transform .3s;
+    }
+    .turno-num.flash { animation: flash .5s ease; }
+    @keyframes flash {
+      0% { transform: scale(1); color: #f5c842; }
+      50% { transform: scale(1.08); color: #fff; }
+      100% { transform: scale(1); color: #f5c842; }
+    }
+    .turno-nombre-actual {
+      font-size: clamp(.8rem, 2vw, 1.2rem);
+      color: #ddd;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .turno-serv-actual {
+      font-size: clamp(.65rem, 1.5vw, .88rem);
+      color: #666;
+      margin-top: 2px;
+    }
+    .tipo-tag {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: .65rem;
+      font-weight: 600;
+    }
+    .tag-cita { background: #001a00; color: #4caf50; border: 1px solid #4caf50; }
+    .tag-walkin { background: #111; color: #555; border: 1px solid #2a2a2a; }
+    .sin-turno {
+      font-size: clamp(1rem, 3vw, 1.8rem);
+      color: #222;
+      padding: 20px 0;
+      font-weight: 300;
+    }
+
+    /* SIGUIENTE */
+    .siguiente-box {
+      padding: 8px 18px;
+      border-top: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+    .siguiente-label { font-size: .6rem; color: #333; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .siguiente-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid #161616;
+    }
+    .siguiente-item:last-child { border-bottom: none; }
+    .sig-num { font-size: .9rem; font-weight: 800; color: #f5c842; min-width: 36px; }
+    .sig-info { flex: 1; }
+    .sig-nombre { font-size: .78rem; color: #ccc; font-weight: 600; }
+    .sig-serv { font-size: .68rem; color: #555; }
+    .sig-cita { font-size: .6rem; color: #4caf50; }
+
+    /* ESPERA COUNT */
+    .espera-count {
+      margin-top: auto;
+      padding: 10px 18px;
+      border-top: 1px solid #161616;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .espera-label { font-size: .65rem; color: #444; }
+    .espera-num { font-size: 1rem; font-weight: 700; color: #f5c842; }
+    .espera-bar {
+      height: 3px;
+      background: #1a1a1a;
+      border-radius: 2px;
+      margin: 0 18px 10px;
+      overflow: hidden;
+    }
+    .espera-fill {
+      height: 100%;
+      background: #f5c842;
+      border-radius: 2px;
+      transition: width .5s ease;
+    }
   </style>
 </head>
 <body>
-<div class="logo">✂ ZERO GRADOS BARBERSHOP</div>
+
+<div class="header">
+  <div class="logo">✂ ZERO GRADOS BARBERSHOP</div>
+  <div class="reloj" id="reloj">00:00</div>
+  <div class="total-badge">En espera: <span id="total-espera">0</span></div>
+</div>
+
 <div class="barberos-grid" id="barberos-grid"></div>
-<div class="footer">Total en espera: <span id="total-espera">0</span></div>
 
 <script>
 const socket = io();
@@ -33,6 +194,17 @@ socket.on('turno_nuevo', cargarTodo);
 socket.on('turno_cancelado', cargarTodo);
 
 let barberos = [];
+const MAX_ESPERA = 10;
+
+// Reloj
+function actualizarReloj() {
+  const ahora = new Date();
+  const h = String(ahora.getHours()).padStart(2,'0');
+  const m = String(ahora.getMinutes()).padStart(2,'0');
+  document.getElementById('reloj').textContent = `${h}:${m}`;
+}
+actualizarReloj();
+setInterval(actualizarReloj, 10000);
 
 async function cargarBarberos() {
   const res = await fetch('/api/barberos');
@@ -45,44 +217,114 @@ async function cargarBarberos() {
 function renderCols() {
   const grid = document.getElementById('barberos-grid');
   grid.innerHTML = barberos.map(b => `
-    <div class="barbero-col" id="col-${b.id}">
-      <div class="barbero-nombre">${b.nombre}</div>
-      <div class="sin-turno" id="num-${b.id}">—</div>
+    <div class="col" id="col-${b.id}">
+      <div class="col-header">
+        <div class="barbero-nombre">${b.nombre}</div>
+        <div class="disponible-badge badge-libre" id="badge-${b.id}">Libre</div>
+      </div>
+      <div class="turno-actual-box" id="actual-${b.id}">
+        <div class="sin-turno">Sin turno activo</div>
+      </div>
+      <div class="espera-bar"><div class="espera-fill" id="bar-${b.id}" style="width:0%"></div></div>
+      <div class="siguiente-box" id="siguiente-${b.id}">
+        <div class="siguiente-label">Próximos en espera</div>
+        <div style="color:#333;font-size:.75rem;padding:4px 0">Sin turnos en espera</div>
+      </div>
+      <div class="espera-count">
+        <span class="espera-label">En espera</span>
+        <span class="espera-num" id="count-${b.id}">0</span>
+      </div>
     </div>`).join('');
 }
 
 async function cargarTodo() {
-  const [r1, r2] = await Promise.all([
-    fetch('/api/turno/lista'),
-    fetch('/api/turno/actual')
-  ]);
-  const {turnos} = await r1.json();
-  const {turno_actual} = await r2.json();
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch('/api/turno/lista'),
+      fetch('/api/turno/actual')
+    ]);
+    const {turnos} = await r1.json();
+    const {turno_actual} = await r2.json();
 
-  let totalEspera = 0;
-  for (const b of barberos) {
-    const actual = turnos.find(t => t.barbero_id===b.id && t.estado==='en_atencion')
-                || (turno_actual && turno_actual.barbero_id===b.id ? turno_actual : null);
-    const espera = turnos.filter(t => t.barbero_id===b.id && t.estado==='esperando').length;
-    totalEspera += espera;
-    const col = document.getElementById(`col-${b.id}`);
-    if (!col) continue;
-    if (actual) {
-      col.innerHTML = `
-        <div class="barbero-nombre">${b.nombre}</div>
-        <div class="turno-num">#${actual.numero}</div>
-        <div class="turno-nombre">${actual.nombre}</div>
-        <div class="turno-serv">${actual.servicio}</div>
-        ${actual.tipo==='cita'?'<div class="tipo-cita">📅 Con cita</div>':''}
-        <div style="margin-top:8px;font-size:.72rem;color:#444">En espera: ${espera}</div>`;
-    } else {
-      col.innerHTML = `
-        <div class="barbero-nombre">${b.nombre}</div>
-        <div class="sin-turno">—</div>
-        <div style="margin-top:8px;font-size:.72rem;color:#444">En espera: ${espera}</div>`;
+    let totalEspera = 0;
+
+    for (const b of barberos) {
+      const actual = turnos.find(t => t.barbero_id === b.id && t.estado === 'en_atencion')
+                  || (turno_actual && turno_actual.barbero_id === b.id ? turno_actual : null);
+      const enEspera = turnos.filter(t => t.barbero_id === b.id && t.estado === 'esperando');
+      totalEspera += enEspera.length;
+
+      const col = document.getElementById(`col-${b.id}`);
+      const badge = document.getElementById(`badge-${b.id}`);
+      const actualBox = document.getElementById(`actual-${b.id}`);
+      const sigBox = document.getElementById(`siguiente-${b.id}`);
+      const countEl = document.getElementById(`count-${b.id}`);
+      const barEl = document.getElementById(`bar-${b.id}`);
+
+      if (!col) continue;
+
+      // Badge disponibilidad
+      if (actual) {
+        col.classList.add('activo');
+        badge.className = 'disponible-badge badge-ocupado';
+        badge.textContent = 'Ocupado';
+      } else {
+        col.classList.remove('activo');
+        badge.className = 'disponible-badge badge-libre';
+        badge.textContent = enEspera.length > 0 ? 'Llamando...' : 'Libre';
+      }
+
+      // Turno actual
+      if (actual) {
+        const prevNum = actualBox.querySelector('.turno-num');
+        actualBox.innerHTML = `
+          <div class="label-actual">Atendiendo ahora</div>
+          <div class="turno-num" id="tnum-${b.id}">#${actual.numero}</div>
+          <div class="turno-nombre-actual">${actual.nombre}</div>
+          <div class="turno-serv-actual">${actual.servicio}</div>
+          <div class="tipo-tag ${actual.tipo==='cita'?'tag-cita':'tag-walkin'}">
+            ${actual.tipo==='cita'?'📅 Con cita':'🚶 Walk-in'}
+          </div>`;
+        // Flash si cambió
+        if (!prevNum || prevNum.textContent !== `#${actual.numero}`) {
+          setTimeout(() => {
+            const el = document.getElementById(`tnum-${b.id}`);
+            if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 500); }
+          }, 50);
+        }
+      } else {
+        actualBox.innerHTML = '<div class="sin-turno">—</div>';
+      }
+
+      // Barra de espera
+      const pct = Math.min((enEspera.length / MAX_ESPERA) * 100, 100);
+      barEl.style.width = `${pct}%`;
+
+      // Próximos en espera (máx 3)
+      countEl.textContent = enEspera.length;
+      if (enEspera.length === 0) {
+        sigBox.innerHTML = `<div class="siguiente-label">Próximos en espera</div>
+          <div style="color:#333;font-size:.72rem;padding:4px 0">Sin turnos en espera</div>`;
+      } else {
+        const proximos = enEspera.slice(0, 3);
+        sigBox.innerHTML = `<div class="siguiente-label">Próximos en espera</div>` +
+          proximos.map(t => `
+            <div class="siguiente-item">
+              <div class="sig-num">#${t.numero}</div>
+              <div class="sig-info">
+                <div class="sig-nombre">${t.nombre}</div>
+                <div class="sig-serv">${t.servicio}</div>
+                ${t.tipo==='cita'?'<div class="sig-cita">📅 Con cita</div>':''}
+              </div>
+            </div>`).join('') +
+          (enEspera.length > 3 ? `<div style="color:#444;font-size:.65rem;padding:4px 0">+${enEspera.length-3} más en espera</div>` : '');
+      }
     }
+
+    document.getElementById('total-espera').textContent = totalEspera;
+  } catch(e) {
+    console.error('Error cargando datos:', e);
   }
-  document.getElementById('total-espera').textContent = totalEspera;
 }
 
 cargarBarberos();
